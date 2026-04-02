@@ -1066,107 +1066,416 @@ Inactive User (Blocked)
 
 ## 🚀 Deployment Guide
 
-### Heroku Deployment (Backend)
+### Render Deployment (Backend) ⭐ Recommended
 
-#### 1. Install Heroku CLI
+Render is simple, free, and perfect for production Node.js apps.
 
-```bash
-# Download from https://devcenter.heroku.com/articles/heroku-cli
-# Verify installation
-heroku --version
-```
+#### Step 1: Prepare Your Code (Local)
 
-#### 2. Create Heroku App
+Ensure your backend is git-ready:
 
 ```bash
-heroku create your-finance-app-name
+cd backend
+# Verify Procfile exists for Render
+echo "web: npm start" > Procfile
 ```
 
-#### 3. Set Environment Variables
+Check your `package.json` has correct start script:
+
+```json
+"scripts": {
+  "start": "node index.js",
+  "dev": "nodemon index.js"
+}
+```
+
+#### Step 2: Create MongoDB Atlas Database
+
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Sign up or login to your account
+3. Create a new project
+4. Create a cluster (free tier available)
+5. Click "Connect" and choose "Connect your application"
+6. Copy the connection string: `mongodb+srv://username:password@cluster.mongodb.net/database-name`
+7. Replace `username`, `password`, and `database-name` with your values
+
+#### Step 3: Setup Render Account
+
+1. Go to [Render.com](https://render.com)
+2. Sign up with GitHub account (recommended for easy deployment)
+3. Create new Web Service
+
+#### Step 4: Create Backend Service on Render
+
+1. Click **"New +"** → **"Web Service"**
+2. Click **"Connect a repository"** and select your GitHub repo
+3. Configure:
+   - **Name:** `finance-dashboard-api` (or your choice)
+   - **Region:** Choose closest to you
+   - **Branch:** `main`
+   - **Runtime:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+
+#### Step 5: Add Environment Variables on Render
+
+1. Scroll to **"Environment"** section
+2. Add these variables:
+
+```
+PORT = 5000
+MONGODB_URI = mongodb+srv://username:password@cluster.mongodb.net/finance-db
+JWT_SECRET = generate_a_strong_random_string_here_min_32_chars_use_openssl
+JWT_EXPIRE = 7d
+NODE_ENV = production
+```
+
+**Generate a secure JWT_SECRET:**
 
 ```bash
-heroku config:set \
-  MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/finance-db" \
-  JWT_SECRET="your_super_secret_production_key" \
-  NODE_ENV="production"
+# On macOS/Linux
+openssl rand -base64 32
+
+# On Windows (PowerShell)
+[Convert]::ToBase64String((1..32 | ForEach-Object {Get-Random -Maximum 256})) | Cut -c 1-32
 ```
 
-#### 4. Deploy
+Or use an online generator: https://www.uuidgenerator.net/
+
+#### Step 6: Deploy Backend
+
+1. Click **"Create Web Service"**
+2. Render will automatically build and deploy
+3. Wait for deployment (2-3 minutes)
+4. You'll see a URL like: `https://finance-dashboard-api.onrender.com`
+5. Check logs for any errors: Click **"Logs"** tab
+
+#### Step 7: Verify Backend Deployment
+
+Test your API:
 
 ```bash
-git push heroku main
+curl https://your-render-app.onrender.com/api/summary/dashboard \
+  -H "Authorization: Bearer your-admin-token-here"
 ```
 
-#### 5. Verify Deployment
+If you get a 401 (unauthorized), it means the API is working! ✅
 
-```bash
-heroku open
-heroku logs --tail
-```
+---
 
-### Vercel Deployment (Frontend Only)
+### Vercel Deployment (Frontend) ⭐ Recommended
 
-#### 1. Build Frontend
+#### Step 1: Build Frontend Locally
+
+From your project root:
 
 ```bash
 cd frontend
+npm install
 npm run build
 ```
 
-#### 2. Deploy to Vercel
+You should see:
+```
+✓ 1234 modules transformed
+dist/index.html                    45.23 kB
+dist/assets/index-abc123.js     154.67 kB
+```
+
+#### Step 2: Create Vercel Account
+
+1. Go to [Vercel.com](https://vercel.com)
+2. Sign up with GitHub (recommended)
+3. Authorize Vercel to access your GitHub repos
+
+#### Step 3: Import Project on Vercel
+
+1. Click **"Add New"** → **"Project"**
+2. Select your **Finance-Dashboard** repository
+3. Configure:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** `frontend` (important!)
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+
+#### Step 4: Add Environment Variables on Vercel
+
+1. Scroll to **"Environment Variables"**
+2. Add:
+
+```
+VITE_API_BASE_URL = https://your-render-app.onrender.com/api
+```
+
+*(Replace with your actual Render backend URL from Step 7 above)*
+
+#### Step 5: Deploy Frontend
+
+1. Click **"Deploy"**
+2. Vercel will build and deploy (2-3 minutes)
+3. You'll get a URL like: `https://finance-dashboard-tau.vercel.app`
+
+#### Step 6: Update Backend CORS in Render
+
+Go back to your Render dashboard and update the environment variable:
+
+```
+CORS_ORIGIN = https://your-vercel-frontend.vercel.app
+```
+
+*(Or keep it as `*` for development, but restrict in production)*
+
+---
+
+### Complete Deployment Checklist
+
+#### Before Deploying Backend to Render
+
+- [ ] MongoDB Atlas cluster created with connection string
+- [ ] JWT_SECRET generated (32+ chars, random)
+- [ ] `.env.example` exists in backend
+- [ ] Production `.env` file created locally (NOT in GitHub)
+- [ ] All dependencies installed: `npm install`
+- [ ] No `node_modules` in Git (check `.gitignore`)
+- [ ] No `.env` file in Git
+- [ ] All files committed: `git add .` → `git commit -m "ready for deployment"`
+- [ ] Git pushed to GitHub: `git push origin main`
+
+#### Before Deploying Frontend to Vercel
+
+- [ ] Build succeeds locally: `npm run build`
+- [ ] No console errors: `npm run dev`
+- [ ] Test login with credentials:
+  - admin@example.com / admin123456
+- [ ] Backend URL is correct in `.env.example`
+- [ ] All dependencies installed: `npm install`
+- [ ] `dist/` folder in `.gitignore`
+- [ ] All changes committed and pushed to GitHub
+
+---
+
+### Step-by-Step Deployment (Complete Walkthrough)
+
+**Time estimate: 15-20 minutes**
+
+#### Part 1: Prepare MongoDB (5 min)
 
 ```bash
-npm install -g vercel
-vercel --prod
+# Go to https://www.mongodb.com/cloud/atlas
+# 1. Create account if needed
+# 2. Create new project
+# 3. Create cluster (free M0 tier)
+# 4. Wait for cluster to be ready
+# 5. Click "Connect" button
+# 6. Choose "Connect your application"
+# 7. Copy connection string
+# 8. Copy your connection URI
+
+# Save it as: mongodb+srv://username:password@cluster.mongodb.net/finance-db
 ```
 
-#### 3. Update Environment Variables in Vercel Dashboard
-
-```
-VITE_API_BASE_URL=https://your-heroku-backend.herokuapp.com/api
-```
-
-### Netlify Deployment (Frontend)
-
-#### 1. Build Frontend
+#### Part 2: Deploy Backend to Render (5 min)
 
 ```bash
+# Ensure all changes are committed
+git status  # Should show "nothing to commit"
+git push origin main
+
+# Then:
+# 1. Go to https://render.com
+# 2. Sign in with GitHub
+# 3. Click "New +" → "Web Service"
+# 4. Connect your repository
+# 5. Set name: finance-dashboard-api
+# 6. Build Command: npm install
+# 7. Start Command: npm start
+# 8. Add Environment Variables:
+#    PORT=5000
+#    MONGODB_URI=<your_mongodb_uri>
+#    JWT_SECRET=<random_32_chars>
+#    JWT_EXPIRE=7d
+#    NODE_ENV=production
+# 9. Click "Create Web Service"
+# 10. Wait for deployment (watch the logs)
+# 11. Copy your backend URL from the dashboard
+```
+
+#### Part 3: Deploy Frontend to Vercel (5 min)
+
+```bash
+# Build and test locally
 cd frontend
 npm run build
-# Creates dist/ folder
+# If successful, proceed
+
+# Then:
+# 1. Go to https://vercel.com
+# 2. Click "Add New" → "Project"
+# 3. Import your GitHub repository
+# 4. Framework: Vite
+# 5. Root Directory: frontend
+# 6. Build: npm run build
+# 7. Output: dist
+# 8. Environment Variables:
+#    VITE_API_BASE_URL=https://your-render-backend-url.com/api
+# 9. Click "Deploy"
+# 10. Wait for deployment
+# 11. Copy your frontend URL
 ```
 
-#### 2. Deploy to Netlify
+#### Part 4: Test Deployment (5 min)
 
 ```bash
-npm install -g netlify-cli
-netlify deploy --prod --dir=dist
+# 1. Open your Vercel frontend URL in browser
+# 2. Try to login with:
+#    Email: admin@example.com
+#    Password: admin123456
+# 3. Check if dashboard loads
+# 4. Verify API calls work (check DevTools → Network)
+# 5. Test creating a new record (if Admin)
 ```
 
-#### 3. Configure Environment
+---
 
-In Netlify Dashboard:
+### Troubleshooting Deployment Issues
 
-- Settings → Build & Deploy → Environment
-- Add: `VITE_API_BASE_URL` = https://your-backend-url/api
+**Backend won't deploy on Render**
+
+1. Check logs: Click **"Logs"** tab in Render dashboard
+2. Common issues:
+   - `Cannot find module` → Run `npm install` locally
+   - `MONGODB_URI not defined` → Check environment variables on Render
+   - `Port already in use` → Don't set PORT to a specific number, let Render assign
+
+**Frontend won't build on Vercel**
+
+1. Check build logs in Vercel dashboard
+2. Common issues:
+   - `VITE_API_BASE_URL undefined` → Check environment variables
+   - `Module not found` → Run `npm install` locally
+   - `Cannot find file dist/index.html` → Wrong root directory (should be `frontend`)
+
+**API calls failing from frontend**
+
+1. Check Network tab in browser DevTools
+2. Verify `VITE_API_BASE_URL` is correct
+3. Check CORS on backend (should allow Vercel domain)
+4. Verify JWT token is being sent in requests
+
+**"Invalid token" after deployment**
+
+1. Clear browser cache: Ctrl+Shift+Delete
+2. Log out and log back in
+3. Check JWT_SECRET is same on Render and local
+4. Check token expiry: JWT_EXPIRE=7d
+
+---
+
+### Advanced: Custom Domain Setup
+
+#### Add Domain to Vercel (Frontend)
+
+1. Go to Vercel project settings
+2. Click "Domains"
+3. Enter your domain: `myfinancedash.com`
+4. Update DNS records (Vercel will show instructions)
+5. Wait 24-48 hours for propagation
+
+#### Add Domain to Render (Backend)
+
+1. Go to Render service settings
+2. Click "Custom Domains"
+3. Add your API domain: `api.myfinancedash.com`
+4. Update DNS records
+5. Wait for SSL certificate
+
+---
+
+### Database Seeding on Production
+
+After deploying backend, seed the database once:
+
+```bash
+# Option 1: Via API request (recommended)
+curl -X POST https://your-render-backend.onrender.com/api/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "admin123456"
+  }'
+
+# Option 2: Run seedData.js against production (not recommended)
+# This requires SSH access - better to use API instead
+```
+
+---
+
+### Keep Render Backend Awake
+
+Render free tier puts apps to sleep after 15 min of inactivity. To prevent:
+
+1. **Option A:** Upgrade Plan (paid)
+2. **Option B:** Use a Uptime Monitor:
+
+```bash
+# Use a free service like:
+# - https://uptimerobot.com
+# - https://cronhub.io
+# - https://getping.com
+
+# Set it to ping your backend every 10 minutes:
+# GET https://your-render-backend.onrender.com/api/summary/totals
+```
+
+3. **Option C:** Accept the 30-second cold start on first request
 
 ### Production Environment Variables
 
-**Backend (.env for production):**
+**Backend on Render (.env or Render Dashboard):**
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
-JWT_SECRET=generate_a_strong_random_string_here_min_32_chars
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/finance-db?retryWrites=true&w=majority
+JWT_SECRET=k7#mP2$xL9@vQ4&wN3!bY5%jT6^zH8(aB1)cD0_eF
 JWT_EXPIRE=7d
 NODE_ENV=production
 ```
 
-**Frontend (.env for production):**
+**Frontend on Vercel (.env.local or Vercel Dashboard):**
 
 ```env
-VITE_API_BASE_URL=https://your-production-backend-url.com/api
+VITE_API_BASE_URL=https://finance-dashboard-api.onrender.com/api
 ```
+
+---
+
+### Environment Variables Quick Reference
+
+| Platform | File Location | How to Set |
+|----------|---------------|-----------|
+| **Render Backend** | Environment Section | Dashboard → Settings → Environment |
+| **Vercel Frontend** | Environment Variables | Dashboard → Settings → Environment Variables |
+| **Local Development** | `.env` file in folder | Create file, never commit to GitHub |
+
+---
+
+### MongoDB Connection String Format
+
+```
+mongodb+srv://username:password@cluster.mongodb.net/database-name?retryWrites=true&w=majority
+```
+
+**Example:**
+```
+mongodb+srv://admin:MySecurePass123@finance-cluster.mongodb.net/finance-db?retryWrites=true&w=majority
+```
+
+**Note:** 
+- Replace `username` with your MongoDB user
+- Replace `password` with your MongoDB password (URL-encode special chars: `@` → `%40`)
+- Replace `finance-cluster` with your actual cluster name
+- Use `finance-db` or your database name
 
 ---
 
