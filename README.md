@@ -1176,6 +1176,7 @@ npm run build
 ```
 
 You should see:
+
 ```
 ✓ 1234 modules transformed
 dist/index.html                    45.23 kB
@@ -1207,7 +1208,7 @@ dist/assets/index-abc123.js     154.67 kB
 VITE_API_BASE_URL = https://your-render-app.onrender.com/api
 ```
 
-*(Replace with your actual Render backend URL from Step 7 above)*
+_(Replace with your actual Render backend URL from Step 7 above)_
 
 #### Step 5: Deploy Frontend
 
@@ -1223,7 +1224,7 @@ Go back to your Render dashboard and update the environment variable:
 CORS_ORIGIN = https://your-vercel-frontend.vercel.app
 ```
 
-*(Or keep it as `*` for development, but restrict in production)*
+_(Or keep it as `_` for development, but restrict in production)\*
 
 ---
 
@@ -1452,11 +1453,11 @@ VITE_API_BASE_URL=https://finance-dashboard-api.onrender.com/api
 
 ### Environment Variables Quick Reference
 
-| Platform | File Location | How to Set |
-|----------|---------------|-----------|
-| **Render Backend** | Environment Section | Dashboard → Settings → Environment |
-| **Vercel Frontend** | Environment Variables | Dashboard → Settings → Environment Variables |
-| **Local Development** | `.env` file in folder | Create file, never commit to GitHub |
+| Platform              | File Location         | How to Set                                   |
+| --------------------- | --------------------- | -------------------------------------------- |
+| **Render Backend**    | Environment Section   | Dashboard → Settings → Environment           |
+| **Vercel Frontend**   | Environment Variables | Dashboard → Settings → Environment Variables |
+| **Local Development** | `.env` file in folder | Create file, never commit to GitHub          |
 
 ---
 
@@ -1467,11 +1468,13 @@ mongodb+srv://username:password@cluster.mongodb.net/database-name?retryWrites=tr
 ```
 
 **Example:**
+
 ```
 mongodb+srv://admin:MySecurePass123@finance-cluster.mongodb.net/finance-db?retryWrites=true&w=majority
 ```
 
-**Note:** 
+**Note:**
+
 - Replace `username` with your MongoDB user
 - Replace `password` with your MongoDB password (URL-encode special chars: `@` → `%40`)
 - Replace `finance-cluster` with your actual cluster name
